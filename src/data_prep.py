@@ -38,3 +38,30 @@ def prep_data(X, cat_vars=[], target=None, encoder=None, scaler=None, for_traini
 	X_cat = X[[cat_vars]]
 	con_cols = X.select_dtypes(include=['numbers']).columns.tolist()
 	X_con = X[con_cols]
+
+	# When prepping to train model
+	if for_training == True:
+		encoder = OneHotEncoder()
+		scaler = StandardScaler()
+		X_cat = encoder.fit_transform(X_cat)
+		X_con = scaler.fit_transform(X_con)
+	# When processing input for inference
+	else:
+		X_cat = encoder.fit_transform(X_cat)
+		X_con = scaler.fit_transform(X_con)
+	# Combine scaled/encoded features and return output
+	X = np.concatenate([X_cat, X_con], axis=1)
+	return X, y, encoder, scaler
+
+def clean_data(data):
+	"""
+	Performs cleaning on the passed dataset.
+
+	Input:
+	data - pd.DataFrame:
+		The dataframe to be cleaned
+	
+	Output:
+	cleaned_data - pd.DataFrame:
+		The cleaned dataframe
+	"""
