@@ -105,7 +105,7 @@ def save_model(model, path):
 	NA (model will appear in 'outputs')
 	"""
 	# Create context window for a new file where the serialized model will be saved.
-	with open(f'{path}.pkl', 'wb') as f:
+	with open(f'outputs/{path}.pkl', 'wb') as f:
 		pkl.dump(model, f)
 
 def load_model(path):
@@ -121,7 +121,7 @@ def load_model(path):
 		callable model.
 	"""
 	# Fetch the saved model at the given path and return it as a callable object.
-	with open(f'{path}.pkl', 'rb') as f:
+	with open(f'outputs/{path}.pkl', 'rb') as f:
 		model = pkl.load(f)
 	# Return the model
 	return model
