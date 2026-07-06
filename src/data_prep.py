@@ -1,8 +1,6 @@
 import pandas as pd
-import numpy as np
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
-def prep_data(X, target=None, encoder=None, scaler=None, for_training=True):
+def prep_data(X, target):
 	"""
 	Takes in an dataframe containing the data to be used in the analysis and prepares it for either inference
 	or training.
@@ -10,57 +8,31 @@ def prep_data(X, target=None, encoder=None, scaler=None, for_training=True):
 	Inputs:
 	X - DataFrame:
 		The data needing prepped
-	cat_vars - list:
-		A list of column names for the categorical variables in X.
 	target - str:
 		The name of the target column in the dataset.
-	encoder - sklearn.preprocessing.OneHotEncoder:
-		Trained encoder to be used to encode categorical variables.
-	scaler - sklearn.preprocessing.StandardScaler:
-		Trained scaler to be used to sccale continuous variables.
-	for_training - bool:
-		Indicates if the data is being prepped for training (True), or will be used for inference (False).
+
 
 	Outputs:
-	X
-	y
-	encoder
-	scaler
+	X - pd.DataFrame:
+		Dataframe contianing the data features
+	y - pd.Series:
+		Pandas series containing the target column.
+	con_cols - list:
+		A list containing the column names for the continuous features
+	cat_cols - list:
+		A list containing the column names for the categorical features
 	"""
 	# Separate the target column from the other columns (if no target column, assign y to empty array.)
-	if target is not None:
-		y = X[target]
-		X = X.drop([target], axis=1)
-	else:
-		y = np.array([])
+	y = X[target]
+	X = X.drop([target], axis=1)
 	
-	# Separate the categorical, continuous and binary columns
-	X_cat = X.loc[:, X.nunique() == 3]
-	con_cols = X.select_dtypes(include=['numbers']).columns.tolist()
-	X_con = X[con_cols]
-	X_bin = X.loc[:, X.nunique() == 2]
+	# Separate the categorical and continuous columns
+	con_cols = X.select_dtypes(include=['number']).columns.tolist()
+	cat_cols = X.select_dtypes(exclude=['number']).columns.tolist()
+	# Transform y to numeric values instead of
+	y = y.replace({'Yes': 1, 'No': 0})
 
-	# Fit/transform column groups with the necessary transformer (simple .replace() for binary columns)
-	if for_training == True:
-		encoder = OneHotEncoder()
-		scaler = StandardScaler()
-		X_cat = encoder.fit_transform(X_cat)
-		X_con = scaler.fit_transform(X_con)
-		X_bin = X_bin.replace({'Yes': 1, 'No': 0})
-		# We also need to convert target values to numeric from string.
-		y = y.replace({'Yes': 1, 'No': 0})
-	# When processing input for inference
-	else:
-		X_cat = encoder.fit_transform(X_cat)
-		X_con = scaler.fit_transform(X_con)
-		X_bin = X_bin.replace({'Yes': 1, 'No': 0})
-		try:
-			y = y.replace({'Yes': 1, 'No': 0})
-		except AttributeError:
-			pass
-	# Combine scaled/encoded features and return output
-	X = np.concatenate([X_cat, X_con, X_bin], axis=1)
-	return X, y, encoder, scaler
+	return X, y, con_cols, cat_cols
 
 def clean_data(data):
 	"""

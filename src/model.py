@@ -4,8 +4,11 @@ import pickle as pkl
 from sklearn.metrics import precision_score, recall_score, fbeta_score, make_scorer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV, TunedThresholdClassifierCV
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
-def train_model(X_train, y_train):
+def train_model(X_train, y_train, cat_cols, con_cols):
 	"""
 	Takes in the training data subset and returns a trained logistic regression model.
 
@@ -17,23 +20,38 @@ def train_model(X_train, y_train):
 
 	Output:
 	model - LogisticRegression()
-		The trained logistic regression model.
+		The trained logistic regression model with the optimal combination of parameters.
 	"""
+	# define a ColumnTransformer instance to handle the preprocessing steps in the pipeline.
+	preproc = ColumnTransformer(
+		transformers=[
+			('scale', StandardScaler(), con_cols),
+			('encode', OneHotEncoder(drop='if_binary'), cat_cols)
+		],
+		remainder='drop'
+	)
+	# Now we want to create a Pipeline instance that will handle the preprocessing and fitting of the model.
+	pipe = Pipeline([
+		('preprocessing', preproc),
+		('clf', LogisticRegression(max_iter=500, random_state=42))
+	])
 	# Define the range of parameters to be searched
 	param_dist = {
-		'solver': ['lbfgs', 'liblinear'],
-		'C': np.logspace(-2, 3, 10),
-		'max_iter': np.arange(100, 300, 50)
+		'clf__solver': ['lbfgs', 'liblinear'],
+		'clf__C': np.logspace(-2, 3, 10),
 	}
-	# instantiate the logit and scorer
-	logit = LogisticRegression(random_state=42, class_weight='balanced')
-	scorer = make_scorer(fbeta_score, beta=2)
-	# Do a grid search of param_dist to find the optimal combination of parameters
-	gs = GridSearchCV(logit, param_dist, scoring=scorer)
+	# Create GridSearchCV object that will search param_dist for the optimal parameters
+	gs = GridSearchCV(
+		pipe,
+		param_dist,
+		scoring=make_scorer(fbeta_score, beta=2)
+	)
+	# Fit gridsearch to training data
 	gs.fit(X_train, y_train)
-	# Return the highest-scoring model from the grid search
+	# Return the best performing model from the gridsearch
 	model = gs.best_estimator_
 	return model
+
 
 def tune_threshold(model, X_val, y_val):
 	"""
