@@ -47,8 +47,8 @@ def clean_data(data):
 		The cleaned dataframe
 	"""
 	# Separate the column(s) that need imputing instaed of dropping nans.
-	impute_cols = data.loc[:, data.isna().mean() > 0.05].index
-	drop_cols = data.loc[:, data.isna().mean() <= 0.05].index
+	impute_cols = data.loc[:, data.isna().mean() > 0.05].columns
+	drop_cols = data.loc[:, data.isna().mean() <= 0.05].columns
 	# An array of the remaining row indices present after na's are dropped from drop_cols.
 	# This will ensure that we keep the same original indices when imputed columns and dropna columns
 	# are recombined in the final cleaned df.
@@ -64,3 +64,5 @@ def clean_data(data):
 	assert cleaned_df.isna().sum().sum() == 0
 	# Save the cleaned data as a csv file in the outputs/ directory
 	cleaned_df.to_csv('outputs/cleaned_data.csv', index=False)
+	# Return the cleaned dataframe.
+	return cleaned_df

@@ -6,9 +6,8 @@ from sklearn.model_selection import train_test_split
 # First, we create a dataframe from the heart_disease dataset
 df = pd.read_csv('data/heart_disease.csv')
 # Now we clean the data
-clean_data(df)
+cleaned = clean_data(df)
 # Now take the cleaned data and prep it for training (prep_data yields features, target, encoder, scaler in respectively)
-cleaned = pd.read_csv('outputs/cleaned_data.csv')
 X, y, con_cols, cat_cols = prep_data(cleaned, target='Heart Disease Status')
 # Now, let's make the train/val/test split of the data
 ## First split -> create train and temp from X and y
