@@ -2,6 +2,7 @@ import pandas as pd
 from src.data_prep import prep_data, clean_data
 from src.model import train_model, tune_threshold, save_model
 from sklearn.model_selection import train_test_split
+from sklearn.dummy import DummyClassifier
 
 # First, we create a dataframe from the heart_disease dataset
 df = pd.read_csv('data/heart_disease.csv')
@@ -19,5 +20,9 @@ X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, s
 model = train_model(X_train, y_train, cat_cols, con_cols)
 # We want to tune the decision threshold since we are more focused on reducing false negatives.
 tuned = tune_threshold(model, X_val, y_val)
-# Let's now go ahead and save the tuned model to our outputs
+# Now we create the dummy, fit it to the test data, and serialize it as its own pickle file.
+dummy = DummyClassifier(strategy='prior', random_state=42)
+dummy.fit(X_train, y_train)
+# Let's now go ahead and save the tuned model and the dummy classifier to our outputs directory
 save_model(tuned, 'model')
+save_model(dummy, 'dummy')
